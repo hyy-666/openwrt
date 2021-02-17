@@ -11,14 +11,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=qt5
-PKG_VERSION:=5.13
+PKG_VERSION:=5.15
 PKG_RELEASE:=2
 
 PKG_SOURCE:=qt-everywhere-src-$(PKG_VERSION).$(PKG_RELEASE).tar.xz
 PKG_SOURCE_URL:= https://mirrors.tuna.tsinghua.edu.cn/qt/archive/qt/$(PKG_VERSION)/$(PKG_VERSION).$(PKG_RELEASE)/single/ \
 		 https://mirrors.ustc.edu.cn/qtproject/archive/qt/$(PKG_VERSION)/$(PKG_VERSION).$(PKG_RELEASE)/single/ \
 		 http://download.qt-project.org/archive/qt/$(PKG_VERSION)/$(PKG_VERSION).$(PKG_RELEASE)/single/
-PKG_HASH:=55e8273536be41f4f63064a79e552a22133848bb419400b6fa8e9fc0dc05de08
+PKG_HASH:=3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240
 
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
@@ -64,6 +64,12 @@ define Package/qt5-xml
 	DEPENDS+=+qt5-core
 endef
 
+define Package/qt5-sql
+	$(call Package/qt5/Default)
+	TITLE+=sql
+	DEPENDS+=+qt5-core
+endef
+
 CONFIGURE_ARGS = \
 		-prefix /usr \
 		-extprefix $(TOOLCHAIN_DIR) \
@@ -76,6 +82,7 @@ CONFIGURE_ARGS = \
 		-opensource \
 		-confirm-license \
 		-system-doubleconversion \
+		-openssl-linked \
 		-system-pcre \
 		-system-zlib \
 		-openssl-runtime \
@@ -94,26 +101,22 @@ CONFIGURE_ARGS = \
 		-no-iconv \
 		-no-kms \
 		-no-pch \
-		-no-libudev \
-		-no-mtdev \
+		-no-slog2 \
+		-no-trace \
 		-no-tslib \
 		-no-libpng \
 		-no-libjpeg \
-		-no-sql-db2 \
-		-no-sql-ibase \
-		-no-sql-mysql \
-		-no-sql-oci \
-		-no-sql-odbc \
-		-no-sql-psql \
-		-no-sql-sqlite \
-		-no-sql-sqlite2 \
-		-no-sqlite \
-		-no-sql-tds \
 		-no-strip \
 		-no-xcb \
 		-no-gui \
 		-no-widgets \
-		-no-glib \
+		-no-xcb \
+		-no-xkbcommon \
+		-no-zstd \
+		-no-compile-examples \
+		-no-feature-concurrent \
+		-no-feature-gssapi \
+		-no-feature-testlib \
 		-make libs \
 		-nomake examples \
 		-nomake tests \
@@ -143,8 +146,7 @@ CONFIGURE_ARGS = \
 		-skip websockets \
 		-skip webchannel \
 		-skip xmlpatterns \
-		-v \
-
+		-v
 define Build/Configure
 	$(SED) 's@$$$$(TARGET_CROSS)@$(TARGET_CROSS)@g' $(PKG_BUILD_DIR)/qtbase/mkspecs/linux-openwrt-g++/qmake.conf
 	$(SED) 's@$$$$(TARGET_CFLAGS)@$(TARGET_CFLAGS)@g' $(PKG_BUILD_DIR)/qtbase/mkspecs/linux-openwrt-g++/qmake.conf
@@ -179,6 +181,14 @@ define Package/qt5-xml/install
 	$(CP) $(PKG_BUILD_DIR)/qtbase/lib/libQt5Xml.so* $(1)/usr/lib
 endef
 
+define Package/qt5-sql/install
+	$(INSTALL_DIR) $(1)/usr/lib/
+	$(INSTALL_DIR) $(1)/usr/lib/Qt/plugins/sqldrivers/
+	$(CP) $(PKG_BUILD_DIR)/qtbase/lib/libQt5Sql.so* $(1)/usr/lib/
+	$(CP) $(PKG_BUILD_DIR)/qtbase/plugins/sqldrivers/*.so $(1)/usr/lib/Qt/plugins/sqldrivers/
+endef
+
 $(eval $(call BuildPackage,qt5-core,+zlib,+libpcre2-16,+libdouble-conversion))
 $(eval $(call BuildPackage,qt5-network))
 $(eval $(call BuildPackage,qt5-xml))
+$(eval $(call BuildPackage,qt5-sql))
