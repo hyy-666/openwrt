@@ -742,7 +742,7 @@ endef
 TARGET_DEVICES += xiaomi_mi-router-4q
 
 define Device/xwrt_csac
-  SOC := qca9563
+  ATH_SOC := qca9563
   DEVICE_VENDOR := XWRT
   DEVICE_MODEL := CSAC
   KERNEL_SIZE := 1472k
@@ -756,7 +756,7 @@ endef
 TARGET_DEVICES += xwrt_csac
 
 define Device/xwrt_csac2
-  SOC := qca9563
+  ATH_SOC := qca9563
   DEVICE_VENDOR := XWRT
   DEVICE_MODEL := CSAC2
   IMAGE_SIZE := 14464k
