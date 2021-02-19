@@ -19,7 +19,6 @@
 #include <linux/version.h>
 #include <linux/byteorder/generic.h>
 #include <linux/of.h>
-#include <dt-bindings/mtd/partitions/uimage.h>
 
 #include "mtdsplit.h"
 
