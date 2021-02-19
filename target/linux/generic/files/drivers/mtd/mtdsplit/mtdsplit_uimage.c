@@ -18,6 +18,8 @@
 #include <linux/mtd/partitions.h>
 #include <linux/version.h>
 #include <linux/byteorder/generic.h>
+#include <linux/of.h>
+#include <dt-bindings/mtd/partitions/uimage.h>
 
 #include "mtdsplit.h"
 
@@ -75,6 +77,19 @@ read_uimage_header(struct mtd_info *mtd, size_t offset, u_char *buf,
 	return 0;
 }
 
+static void uimage_parse_dt(struct mtd_info *master, int *extralen, u32 *ih_magic)
+{
+	struct device_node *np = mtd_get_of_node(master);
+
+	if (!np || !of_device_is_compatible(np, "openwrt,uimage"))
+		return;
+
+	if (!of_property_read_u32(np, "openwrt,padding", extralen))
+		pr_debug("got openwrt,padding=%d from device-tree\n", *extralen);
+	if (!of_property_read_u32(np, "openwrt,ih-magic", ih_magic))
+		pr_debug("got openwrt,ih-magic=%08x from device-tree\n", *ih_magic);
+}
+
 /**
  * __mtdsplit_parse_uimage - scan partition and create kernel + rootfs parts
  *
@@ -96,6 +111,8 @@ static int __mtdsplit_parse_uimage(struct mtd_info *master,
 	size_t rootfs_size = 0;
 	int uimage_part, rf_part;
 	int ret;
+	int extralen = 0;
+	u32 ih_magic = IH_MAGIC;
 	enum mtdsplit_part_type type;
 
 	nr_parts = 2;
@@ -109,6 +126,8 @@ static int __mtdsplit_parse_uimage(struct mtd_info *master,
 		goto err_free_parts;
 	}
 
+	uimage_parse_dt(master, &extralen, &ih_magic);
+
 	/* find uImage on erase block boundaries */
 	for (offset = 0; offset < master->size; offset += master->erasesize) {
 		struct uimage_header *header;
@@ -119,7 +138,7 @@ static int __mtdsplit_parse_uimage(struct mtd_info *master,
 		if (ret)
 			continue;
 
-		ret = find_header(buf, MAX_HEADER_LEN);
+		ret = find_header(buf, MAX_HEADER_LEN, ih_magic);
 		if (ret < 0) {
 			pr_debug("no valid uImage found in \"%s\" at offset %llx\n",
 				 master->name, (unsigned long long) offset);
@@ -243,6 +262,7 @@ mtdsplit_uimage_parse_generic(struct mtd_info *master,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
 static const struct of_device_id mtdsplit_uimage_of_match_table[] = {
 	{ .compatible = "denx,uimage" },
+	{ .compatible = "openwrt,uimage" },
 	{},
 };
 #endif
@@ -257,6 +277,7 @@ static struct mtd_part_parser uimage_generic_parser = {
 	.type = MTD_PARSER_TYPE_FIRMWARE,
 };
 
+#define FW_MAGIC_GS110TPPV1	0x4e474520
 #define FW_MAGIC_WNR2000V1	0x32303031
 #define FW_MAGIC_WNR2000V3	0x32303033
 #define FW_MAGIC_WNR2000V4	0x32303034
@@ -274,6 +295,10 @@ static ssize_t uimage_verify_wndr3700(u_char *buf, size_t len)
 	uint8_t expected_type = IH_TYPE_FILESYSTEM;
 
 	switch (be32_to_cpu(header->ih_magic)) {
+	case FW_MAGIC_GS110TPPV1:
+	case FW_MAGIC_WNR2000V4:
+		expected_type = IH_TYPE_KERNEL;
+		break;
 	case FW_MAGIC_WNR612V2:
 	case FW_MAGIC_WNR1000V2:
 	case FW_MAGIC_WNR1000V2_VC:
@@ -323,6 +348,54 @@ static struct mtd_part_parser uimage_netgear_parser = {
 	.parse_fn = mtdsplit_uimage_parse_netgear,
 	.type = MTD_PARSER_TYPE_FIRMWARE,
 };
+
+
+/**************************************************
+ * ALLNET
+ **************************************************/
+
+#define FW_MAGIC_SG8208M	0x00000006
+#define FW_MAGIC_SG8310PM	0x83000006
+
+static ssize_t uimage_verify_allnet(u_char *buf, size_t len, u32 ih_magic)
+{
+	struct uimage_header *header = (struct uimage_header *)buf;
+
+	switch (be32_to_cpu(header->ih_magic)) {
+	case FW_MAGIC_SG8208M:
+	case FW_MAGIC_SG8310PM:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	if (header->ih_os != IH_OS_LINUX)
+		return -EINVAL;
+
+	return 0;
+}
+
+static int
+mtdsplit_uimage_parse_allnet(struct mtd_info *master,
+			      const struct mtd_partition **pparts,
+			      struct mtd_part_parser_data *data)
+{
+	return __mtdsplit_parse_uimage(master, pparts, data,
+				      uimage_verify_allnet);
+}
+
+static const struct of_device_id mtdsplit_uimage_allnet_of_match_table[] = {
+	{ .compatible = "allnet,uimage" },
+	{},
+};
+
+static struct mtd_part_parser uimage_allnet_parser = {
+	.owner = THIS_MODULE,
+	.name = "allnet-fw",
+	.of_match_table = mtdsplit_uimage_allnet_of_match_table,
+	.parse_fn = mtdsplit_uimage_parse_allnet,
+};
+
 
 /**************************************************
  * Edimax
@@ -377,6 +450,59 @@ static struct mtd_part_parser uimage_edimax_parser = {
 };
 
 /**************************************************
+ * OKLI (OpenWrt Kernel Loader Image)
+ **************************************************/
+
+#define IH_MAGIC_OKLI	0x4f4b4c49
+
+static ssize_t uimage_verify_okli(u_char *buf, size_t len, u32 ih_magic)
+{
+	struct uimage_header *header = (struct uimage_header *)buf;
+
+	/* default sanity checks */
+	if (be32_to_cpu(header->ih_magic) != IH_MAGIC_OKLI) {
+		pr_debug("invalid uImage magic: %08x\n",
+			 be32_to_cpu(header->ih_magic));
+		return -EINVAL;
+	}
+
+	if (header->ih_os != IH_OS_LINUX) {
+		pr_debug("invalid uImage OS: %08x\n",
+			 be32_to_cpu(header->ih_os));
+		return -EINVAL;
+	}
+
+	if (header->ih_type != IH_TYPE_KERNEL) {
+		pr_debug("invalid uImage type: %08x\n",
+			 be32_to_cpu(header->ih_type));
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
+mtdsplit_uimage_parse_okli(struct mtd_info *master,
+			      const struct mtd_partition **pparts,
+			      struct mtd_part_parser_data *data)
+{
+	return __mtdsplit_parse_uimage(master, pparts, data,
+				      uimage_verify_okli);
+}
+
+static const struct of_device_id mtdsplit_uimage_okli_of_match_table[] = {
+	{ .compatible = "openwrt,okli" },
+	{},
+};
+
+static struct mtd_part_parser uimage_okli_parser = {
+	.owner = THIS_MODULE,
+	.name = "okli-fw",
+	.of_match_table = mtdsplit_uimage_okli_of_match_table,
+	.parse_fn = mtdsplit_uimage_parse_okli,
+};
+
+/**************************************************
  * Init
  **************************************************/
 
@@ -384,7 +510,9 @@ static int __init mtdsplit_uimage_init(void)
 {
 	register_mtd_parser(&uimage_generic_parser);
 	register_mtd_parser(&uimage_netgear_parser);
+	register_mtd_parser(&uimage_allnet_parser);
 	register_mtd_parser(&uimage_edimax_parser);
+	register_mtd_parser(&uimage_okli_parser);
 
 	return 0;
 }
