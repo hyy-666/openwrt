@@ -18,10 +18,6 @@
 #include <linux/mtd/partitions.h>
 #include <linux/version.h>
 #include <linux/byteorder/generic.h>
-<<<<<<< HEAD
-#include <linux/of.h>
-=======
->>>>>>> parent of 5b7064537f (fix errors)
 
 #include "mtdsplit.h"
 
