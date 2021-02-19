@@ -166,8 +166,7 @@ ath79_setup_interfaces()
 	iodata,wn-ag300dgr|\
 	pcs,cr5000|\
 	wd,mynet-n750|\
-	xwrt,csac|\
-	xwrt,csac2)
+	csac,iii)
 		ucidef_add_switch "switch0" \
 			"0@eth0" "1:lan" "2:lan" "3:lan" "4:lan" "5:wan"
 	;;

@@ -257,8 +257,7 @@ wd,mynet-wifi-rangeextender)
 	ucidef_set_led_rssi "rssimedium" "RSSIMED" "$boardname:blue:rssi-med" "wlan0" "33" "100"
 	ucidef_set_led_rssi "rssihigh" "RSSIMAX" "$boardname:blue:rssi-max" "wlan0" "66" "100"
 	;;
-xwrt,csac|\
-xwrt,csac2)
+csac,iii)
 	ucidef_set_led_wlan "wlan5g" "WLAN5G" "blue:wlan5g" "phy0tpt"
 	ucidef_set_led_wlan "wlan2g" "WLAN2G" "blue:wlan2g" "phy0tpt"
 	;;
