@@ -714,7 +714,7 @@ endef
 TARGET_DEVICES += xiaomi_mi-router-4q
 
 define Device/csac_iii
-  SOC := qca9563
+  ATH_SOC := qca9563
   DEVICE_VENDOR := CSAC
   DEVICE_MODEL := III
   IMAGE_SIZE := 15744k
