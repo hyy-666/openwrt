@@ -745,7 +745,8 @@ define Device/xwrt_csac
   ATH_SOC := qca9563
   DEVICE_VENDOR := XWRT
   DEVICE_MODEL := CSAC
-  IMAGE_SIZE := 16000k
+	IMAGE_SIZE := 15744k
+	IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
   DEVICE_PACKAGES := kmod-leds-reset kmod-ath10k-ct ath10k-firmware-qca9888-ct kmod-usb-core kmod-usb2 lte-modem-xwrt-csac
 endef
 TARGET_DEVICES += xwrt_csac
