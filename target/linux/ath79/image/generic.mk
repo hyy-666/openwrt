@@ -745,7 +745,6 @@ define Device/xwrt_csac
   ATH_SOC := qca9563
   DEVICE_VENDOR := XWRT
   DEVICE_MODEL := CSAC
-  KERNEL_SIZE := 1472k
   IMAGE_SIZE := 16000k
   IMAGES += factory-10.bin factory-05.bin
   IMAGE/sysupgrade.bin := append-rootfs | pad-rootfs | pad-to 14528k | append-kernel | append-metadata | check-size
