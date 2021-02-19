@@ -717,7 +717,7 @@ define Device/csac_iii
   ATH_SOC := qca9563
   DEVICE_VENDOR := CSAC
   DEVICE_MODEL := III
-  IMAGE_SIZE := 15744k
+  IMAGE_SIZE := 15846k
   IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | \
 	append-metadata | check-size
   DEVICE_PACKAGES := kmod-leds-reset kmod-ath10k-ct-smallbuffers ath10k-firmware-qca9888-ct
