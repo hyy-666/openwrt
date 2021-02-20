@@ -59,6 +59,34 @@ define Build/nec-fw
   mv $@.new $@
 endef
 
+define Build/xwrt_csac10-factory
+  -[ -f "$@" ] && \
+  mkdir -p "$@.tmp" && \
+  mv "$@" "$@.tmp/UploadBrush-bin.img" && \
+  binmd5=$$($(STAGING_DIR_HOST)/bin/mkhash md5 "$@.tmp/UploadBrush-bin.img" | head -c32) && \
+  oemmd5=$$(echo -n TB-CSAC10-QCA9563_9886-ROUTE-CSAC10 | $(STAGING_DIR_HOST)/bin/mkhash md5 | head -c32) && \
+  echo -n $${binmd5}$${oemmd5} | $(STAGING_DIR_HOST)/bin/mkhash md5 | head -c32 >"$@.tmp/bin_random_oem.txt" && \
+  echo -n V4.4-201910201745 >"$@.tmp/version.txt" && \
+  $(TAR) -czf $@.tmp.tgz -C "$@.tmp" UploadBrush-bin.img bin_random_oem.txt version.txt && \
+  $(STAGING_DIR_HOST)/bin/openssl aes-256-cbc -md md5 -salt -in $@.tmp.tgz -out "$@" -k QiLunSmartWL && \
+  printf %32s CSAC10 >>"$@" && \
+  rm -rf "$@.tmp"
+endef
+
+define Build/xwrt_csac05-factory
+  -[ -f "$@" ] && \
+  mkdir -p "$@.tmp" && \
+  mv "$@" "$@.tmp/UploadBrush-bin.img" && \
+  binmd5=$$($(STAGING_DIR_HOST)/bin/mkhash md5 "$@.tmp/UploadBrush-bin.img" | head -c32) && \
+  oemmd5=$$(echo -n TB-CSAC05-QCA9563_9886-ROUTE-CSAC05 | $(STAGING_DIR_HOST)/bin/mkhash md5 | head -c32) && \
+  echo -n $${binmd5}$${oemmd5} | $(STAGING_DIR_HOST)/bin/mkhash md5 | head -c32 >"$@.tmp/bin_random_oem.txt" && \
+  echo -n V4.4-201910201745 >"$@.tmp/version.txt" && \
+  $(TAR) -czf $@.tmp.tgz -C "$@.tmp" UploadBrush-bin.img bin_random_oem.txt version.txt && \
+  $(STAGING_DIR_HOST)/bin/openssl aes-256-cbc -md md5 -salt -in $@.tmp.tgz -out "$@" -k QiLunSmartWL && \
+  printf %32s CSAC05 >>"$@" && \
+  rm -rf "$@.tmp"
+endef
+
 define Device/seama
   KERNEL := kernel-bin | append-dtb | relocate-kernel | lzma
   KERNEL_INITRAMFS := $$(KERNEL) | seama
@@ -671,9 +699,15 @@ define Device/csac_iii
   DEVICE_VENDOR := CSAC
   DEVICE_MODEL := III
   IMAGE_SIZE := 15744k
-  IMAGES += breed-factory.bin
-  IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
-  IMAGE/breed-factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
+	COMPILE := loader-$(1).bin loader-$(1).uImage
+  COMPILE/loader-$(1).bin := loader-okli-compile
+  COMPILE/loader-$(1).uImage := append-loader-okli $(1) | pad-to 64k | lzma | uImage lzma
+  KERNEL := kernel-bin | append-dtb | lzma | uImage lzma -M 0x4f4b4c49
+  IMAGES += breed-factory.bin factory-10.bin factory-05.bin
+  IMAGE/breed-factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | \
+			     prepad-okli-kernel $(1) | pad-to 14528k | append-okli-kernel $(1)
+  IMAGE/factory-10.bin := $$(IMAGE/breed-factory.bin) | xwrt_csac10-factory $(1)
+  IMAGE/factory-05.bin := $$(IMAGE/breed-factory.bin) | xwrt_csac05-factory $(1)
   DEVICE_PACKAGES := kmod-leds-reset kmod-ath10k-ct-smallbuffers ath10k-firmware-qca9888-ct
 endef
 TARGET_DEVICES += csac_iii
