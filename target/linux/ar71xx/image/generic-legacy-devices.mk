@@ -115,6 +115,12 @@ define LegacyDevice/AP147_010
 endef
 LEGACY_DEVICES += AP147_010
 
+define LegacyDevice/CSAC_16M
+  DEVICE_TITLE := CSAC reference board (16MB flash)
+  DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-storage kmod-ath10k ath10k-firmware-qca9888
+endef
+LEGACY_DEVICES += CSAC_16M
+
 define LegacyDevice/AP152_16M
   DEVICE_TITLE := Qualcomm Atheros AP152 reference board (16MB flash)
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-storage

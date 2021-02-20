@@ -312,7 +312,8 @@ ar71xx_setup_interfaces()
 	dir-835-a1|\
 	esr900|\
 	mynet-n750|\
-	sr3200)
+	sr3200|\
+	csac,iii)
 		ucidef_add_switch "switch0" \
 			"0@eth0" "1:lan" "2:lan" "3:lan" "4:lan" "5:wan"
 		;;
@@ -420,6 +421,7 @@ ar71xx_setup_interfaces()
 		ucidef_add_switch "switch0" \
 			"0:lan" "1:lan" "3@eth1"
 		;;
+
 	dir-869-a1|\
 	epg5000|\
 	esr1750|\

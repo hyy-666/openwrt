@@ -478,6 +478,9 @@ ar71xx_board_detect() {
 	*"AP531B0")
 		name="ap531b0"
 		;;
+	*"CSAC_III")
+		name="csac"
+		;;
 	*"AP90Q")
 		name="ap90q"
 		;;

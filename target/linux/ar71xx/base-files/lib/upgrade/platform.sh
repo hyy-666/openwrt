@@ -209,6 +209,7 @@ platform_check_image() {
 	ap132|\
 	ap531b0|\
 	ap90q|\
+	csac|\
 	archer-c25-v1|\
 	archer-c58-v1|\
 	archer-c59-v1|\

@@ -575,6 +575,9 @@ get_status_led() {
 	wlr8100)
 		status_led="sitecom:amber:status"
 		;;
+	csac)
+		status_led="csac:green:status"
+		;;
 	esac
 }
 
