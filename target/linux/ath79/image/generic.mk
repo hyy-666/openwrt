@@ -666,6 +666,16 @@ define Device/phicomm_k2t
 endef
 TARGET_DEVICES += phicomm_k2t
 
+define Device/csac_iii
+  ATH_SOC := qca9563
+  DEVICE_VENDOR := CSAC
+  DEVICE_MODEL := III
+  IMAGE_SIZE := 15846k
+  IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
+  DEVICE_PACKAGES := kmod-leds-reset kmod-ath10k-ct-smallbuffers ath10k-firmware-qca9888-ct
+endef
+TARGET_DEVICES += csac_iii
+
 define Device/rosinson_wr818
   ATH_SOC := qca9563
   DEVICE_TITLE := ROSINSON WR818
@@ -712,17 +722,6 @@ define Device/xiaomi_mi-router-4q
   IMAGE_SIZE := 14336k
 endef
 TARGET_DEVICES += xiaomi_mi-router-4q
-
-define Device/csac_iii
-  ATH_SOC := qca9563
-  DEVICE_VENDOR := CSAC
-  DEVICE_MODEL := III
-  IMAGE_SIZE := 15846k
-  IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | \
-	append-metadata | check-size
-  DEVICE_PACKAGES := kmod-leds-reset kmod-ath10k-ct-smallbuffers ath10k-firmware-qca9888-ct
-endef
-TARGET_DEVICES += csac_iii
 
 define Device/yuncore_a770
   ATH_SOC := qca9531
