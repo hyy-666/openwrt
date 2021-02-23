@@ -670,7 +670,7 @@ define Device/csac_iii
   ATH_SOC := qca9563
   DEVICE_VENDOR := CSAC
   DEVICE_MODEL := III
-  IMAGE_SIZE := 15744k
+  IMAGE_SIZE := 16000k
   IMAGES += breed-factory.bin
   IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
   IMAGE/breed-factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
