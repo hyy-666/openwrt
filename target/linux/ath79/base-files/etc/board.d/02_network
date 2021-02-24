@@ -395,8 +395,7 @@ ath79_setup_macs()
 		;;
 	csac,iii)
 		wan_mac=$(mtd_get_mac_binary art 0)
-		lan_mac=$(macaddr_add "$wan_mac" 1)
-		label_mac=$wan_mac
+		lan_mac=$(mtd_get_mac_binary art 6)
 		;;
 	esac
 
